@@ -1,0 +1,9 @@
+{
+  "title": "JY助手_極簡範例",
+  "scenes": [
+    {
+      "path": "../assets/test_clip_a.mp4",
+      "text": "只給 path + text 也能跑"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "title": "JY助手_階段1測試",
+  "project": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "bgm": {
+    "path": "../assets/test_bgm.mp3",
+    "volume": 0.35,
+    "fade_in": "0.5s",
+    "fade_out": "0.5s"
+  },
+  "text_style": {
+    "size": 6.0,
+    "color_r": 1.0,
+    "color_g": 1.0,
+    "color_b": 1.0,
+    "transform_y": -0.75
+  },
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "video",
+      "path": "../assets/test_clip_a.mp4",
+      "duration": 2.0,
+      "text": "第一段：歡迎使用剪映小助手"
+    },
+    {
+      "id": "photo",
+      "type": "image",
+      "path": "../assets/test_image.jpg",
+      "duration": 2.5,
+      "text": "第二段：這是一張圖片場景"
+    },
+    {
+      "id": "outro",
+      "path": "../assets/test_clip_b.mp4",
+      "duration": 2.0,
+      "text": "第三段：完成！請在剪映打開草稿"
+    }
+  ],
+  "allow_replace": true
+}

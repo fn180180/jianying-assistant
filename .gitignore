@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+
+# 測試 / 工具
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Streamlit / IDE
+.streamlit/secrets.toml
+.idea/
+.vscode/
+
+# 系統與暫存
+.DS_Store
+Thumbs.db
+*.log
+
+# 本地大型素材（勿推上 GitHub）
+assets/*.mp4
+assets/*.mp3
+assets/*.wav
+# 保留 assets 目錄本身可用 .gitkeep；測試小圖可另議

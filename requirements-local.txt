@@ -1,0 +1,18 @@
+# ============================================================
+# 本機完整依賴（Coze HTTP + 寫入剪映草稿）
+# 用法：pip install -r requirements-local.txt
+# ============================================================
+
+# 先裝雲端介面那份
+-r requirements.txt
+
+# 剪映草稿轉換（僅本機 Windows 有意義）
+pyJianYingDraft>=0.3.0
+
+# 本地 HTTP 服務（給 Coze 呼叫）
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.27
+
+# 測試（可選）
+pytest>=8.0

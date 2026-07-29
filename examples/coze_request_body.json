@@ -1,0 +1,32 @@
+{
+  "scene": {
+    "title": "JY助手_Coze範例",
+    "project": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30
+    },
+    "bgm": {
+      "path": "../assets/test_bgm.mp3",
+      "volume": 0.3
+    },
+    "scenes": [
+      {
+        "path": "../assets/test_clip_a.mp4",
+        "duration": 2,
+        "text": "來自 Coze 的第一段"
+      },
+      {
+        "path": "../assets/test_image.jpg",
+        "type": "image",
+        "duration": 2,
+        "text": "第二段圖片"
+      }
+    ],
+    "allow_replace": true
+  },
+  "options": {
+    "check_files": true,
+    "base_dir": "C:/Users/Jimmy/jianying-assistant/examples"
+  }
+}

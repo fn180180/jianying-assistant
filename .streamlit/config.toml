@@ -1,0 +1,19 @@
+# Streamlit 介面設定（本機與 Community Cloud 都會讀）
+
+[theme]
+primaryColor = "#FF4B4B"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
+font = "sans serif"
+
+[server]
+headless = true
+# 雲端由平台管理 port；本機預設 8501
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# 手機瀏覽器較友善：工具列可收合
+toolbarMode = "minimal"
