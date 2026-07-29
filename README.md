@@ -44,20 +44,21 @@ streamlit run streamlit_app.py
 
 瀏覽器：http://localhost:8501
 
-## 線上介面：免費部署（Streamlit Cloud）
+## 線上介面：已部署網址
 
-完整步驟：**[docs/STREAMLIT_CLOUD_DEPLOY.md](docs/STREAMLIT_CLOUD_DEPLOY.md)**
+| 項目 | 內容 |
+|------|------|
+| **線上 App（Modal，手機可開）** | https://ddarpcidue130--jianying-assistant-ui-ui.modal.run |
+| **GitHub 倉庫** | https://github.com/fn180180/jianying-assistant |
+| 重新部署 Modal | `modal deploy modal_streamlit.py` |
+| 成本 | 僅 CPU、閒置縮到 0，日常約近乎 $0 |
 
-| 項目 | 值 |
-|------|-----|
-| 倉庫 | 推到 GitHub |
-| Main file path | **`streamlit_app.py`** |
-| 依賴 | 根目錄 `requirements.txt`（僅 streamlit + pydantic） |
-| 費用 | 免費方案 |
+也可另部署到 **Streamlit Community Cloud（免費）**：見 [docs/STREAMLIT_CLOUD_DEPLOY.md](docs/STREAMLIT_CLOUD_DEPLOY.md)  
+Main file 填 `streamlit_app.py`。
 
-模板保存：階段 3 提供下載/上傳 JSON → 你放到 Google 雲端硬碟。
+**模板保存：** 網頁 →「模板下載上傳」→ 下載 JSON → 放到 Google 雲端硬碟 → 下次再上傳。
 
-**UI 階段 1 可做：** 專案名、解析度、FPS、BGM 參數、底圖/封面參數、使用說明頁。
+**功能已齊（階段 1～3）：** 全域設定、分鏡管理、9:16 預覽、JSON 下載/上傳、手機友善版面。
 
 ## 目錄結構
 
