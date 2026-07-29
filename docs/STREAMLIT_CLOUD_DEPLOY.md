@@ -48,22 +48,35 @@ git push -u origin main
 
 ---
 
-## 步驟二：在 Streamlit Community Cloud 部署
+## 步驟二：在 Streamlit Community Cloud 部署（免費）
+
+你的倉庫已是 **public**，符合免費方案條件。
+
+### 方式 A：一鍵連結（推薦）
+
+已用 GitHub 登入 Streamlit 後，點：
+
+https://share.streamlit.io/deploy?repository=fn180180/jianying-assistant&branch=main&mainModule=streamlit_app.py
+
+確認 Main file 是 `streamlit_app.py`，按 Deploy。
+
+### 方式 B：手動
 
 1. 打開：https://share.streamlit.io/  
-   （或搜尋 Streamlit Community Cloud）
-2. 用 **GitHub** 登入
+2. 用 **GitHub** 登入（你若已登入可跳過）
 3. 按 **New app** / **Create app**
 4. 填寫：
    | 欄位 | 填什麼 |
    |------|--------|
-   | Repository | 你的 `帳號/jianying-assistant` |
+   | Repository | `fn180180/jianying-assistant` |
    | Branch | `main` |
    | Main file path | **`streamlit_app.py`** |
    | App URL（可選） | 自己取一個好記的名字 |
 5. 按 Deploy，等 1～3 分鐘安裝依賴
 
-成功後會出現網址，用手機 Safari / Chrome 打開即可。
+成功後會出現網址（通常是 `https://xxxx.streamlit.app`），用手機 Safari / Chrome 打開即可。
+
+> 之前若部署過 Modal 版本，可忽略那個舊網址；已改回免費 Streamlit Cloud。
 
 ---
 

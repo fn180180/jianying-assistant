@@ -44,17 +44,27 @@ streamlit run streamlit_app.py
 
 瀏覽器：http://localhost:8501
 
-## 線上介面：已部署網址
+## 線上介面：Streamlit Community Cloud（免費）
 
 | 項目 | 內容 |
 |------|------|
-| **線上 App（Modal，手機可開）** | https://ddarpcidue130--jianying-assistant-ui-ui.modal.run |
-| **GitHub 倉庫** | https://github.com/fn180180/jianying-assistant |
-| 重新部署 Modal | `modal deploy modal_streamlit.py` |
-| 成本 | 僅 CPU、閒置縮到 0，日常約近乎 $0 |
+| **GitHub 倉庫（public）** | https://github.com/fn180180/jianying-assistant |
+| **Main file path** | `streamlit_app.py` |
+| **Branch** | `main` |
+| **依賴** | 根目錄 `requirements.txt`（只有 streamlit + pydantic） |
+| **費用** | Streamlit Community Cloud 免費方案 |
+| **一鍵部署** | https://share.streamlit.io/deploy?repository=fn180180/jianying-assistant&branch=main&mainModule=streamlit_app.py |
 
-也可另部署到 **Streamlit Community Cloud（免費）**：見 [docs/STREAMLIT_CLOUD_DEPLOY.md](docs/STREAMLIT_CLOUD_DEPLOY.md)  
-Main file 填 `streamlit_app.py`。
+部署步驟（你已用 GitHub 登入的話更簡單）：
+
+1. 打開 [share.streamlit.io](https://share.streamlit.io/)（或上面的一鍵連結）  
+2. 選倉庫 `fn180180/jianying-assistant`  
+3. Branch：`main`，Main file：`streamlit_app.py`  
+4. 按 Deploy，等 1～3 分鐘  
+
+詳細說明：[docs/STREAMLIT_CLOUD_DEPLOY.md](docs/STREAMLIT_CLOUD_DEPLOY.md)
+
+> 先前的 Modal 部署已停止，不再使用（省 Modal 額度）。
 
 **模板保存：** 網頁 →「模板下載上傳」→ 下載 JSON → 放到 Google 雲端硬碟 → 下次再上傳。
 
