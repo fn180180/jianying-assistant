@@ -42,9 +42,85 @@ def extract_link(text: str) -> str:
     return url
 
 
+def decode_router_data(html: str) -> dict:
+    """Extract embedded Douyin mobile SSR JSON without evaluating JavaScript."""
+    for marker in ("window._ROUTER_DATA", "_ROUTER_DATA"):
+        pos = html.find(marker)
+        if pos < 0:
+            continue
+        eq = html.find("=", pos + len(marker))
+        if eq < 0 or eq - pos > 80:
+            continue
+        begin = html.find("{", eq)
+        if begin < 0 or begin - eq > 40:
+            continue
+        try:
+            result, _ = json.JSONDecoder().raw_decode(html[begin:])
+            if isinstance(result, dict):
+                return result
+        except json.JSONDecodeError:
+            pass
+    raise RuntimeError("手機分享頁缺少可解析的 _ROUTER_DATA")
+
+
+def resolve_native_douyin(url: str) -> dict:
+    """Native mobile SSR fallback when 3rd-party API blocks GitHub IPs."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+    }
+    found = re.search(r"/(?:video|share/video)/(\\d{15,22})", url)
+    if found:
+        video_id = found.group(1)
+    else:
+        # Follow only trusted short-link Location headers; never arbitrary URLs.
+        r = requests.get(url, headers=headers, allow_redirects=False, timeout=(8, 15))
+        location = r.headers.get("Location", "")
+        found = re.search(r"/video/(\\d{15,22})", location)
+        if not found:
+            raise RuntimeError("短連結未提供影片 ID")
+        video_id = found.group(1)
+    errors = []
+    for mobile_url in (
+        f"https://www.iesdouyin.com/share/video/{video_id}",
+        f"https://m.douyin.com/share/video/{video_id}",
+    ):
+        try:
+            r = requests.get(mobile_url, headers=headers, timeout=(10, 20))
+            r.raise_for_status()
+            data = decode_router_data(r.text)
+            pages = data.get("loaderData", {})
+            for page in pages.values():
+                if not isinstance(page, dict):
+                    continue
+                items = page.get("videoInfoRes", {}).get("item_list", [])
+                if not items:
+                    continue
+                item = items[0]
+                choices = item.get("video", {}).get("play_addr", {}).get("url_list", [])
+                for candidate in choices:
+                    candidate = candidate.replace("playwm", "play")
+                    if safe_media_url(candidate):
+                        return {"title": item.get("desc", ""),
+                                "author": item.get("author", {}).get("nickname", ""),
+                                "media": candidate}
+                raise RuntimeError("SSR 中的影片 URL 不在允許網域")
+            raise RuntimeError("SSR 中沒有 videoInfoRes.item_list")
+        except (requests.RequestException, RuntimeError, ValueError) as exc:
+            errors.append(type(exc).__name__ + ":" + str(exc)[:90])
+    raise RuntimeError("原生分享頁解析失敗：" + " | ".join(errors))
+
+
 def resolve(url: str) -> dict:
     if safe_media_url(url) and not DOUYIN_PATTERN.fullmatch(url):
         return {"title": "AnyToCopy / CDN 直鏈", "author": "", "media": url}
+    try:
+        return resolve_native_douyin(url)
+    except Exception as native_exc:
+        print("NATIVE_RESOLVER_WARNING", type(native_exc).__name__,
+              str(native_exc)[:180], flush=True)
+    # Public parser is a fallback; it may block GitHub-hosted IPs with HTTP 403.
     r = requests.post("https://z.gao.gs/api.php",
         json={"url": url}, timeout=(12, 35),
         headers={"User-Agent": "Mozilla/5.0", "Referer": "https://z.gao.gs/"})
