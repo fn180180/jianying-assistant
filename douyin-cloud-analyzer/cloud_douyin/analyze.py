@@ -70,14 +70,14 @@ def resolve_native_douyin(url: str) -> dict:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9",
     }
-    found = re.search(r"/(?:video|share/video)/(\\d{15,22})", url)
+    found = re.search(r"/(?:video|share/video)/(\d{15,22})", url)
     if found:
         video_id = found.group(1)
     else:
         # Follow only trusted short-link Location headers; never arbitrary URLs.
         r = requests.get(url, headers=headers, allow_redirects=False, timeout=(8, 15))
         location = r.headers.get("Location", "")
-        found = re.search(r"/video/(\\d{15,22})", location)
+        found = re.search(r"/video/(\d{15,22})", location)
         if not found:
             raise RuntimeError("短連結未提供影片 ID")
         video_id = found.group(1)
