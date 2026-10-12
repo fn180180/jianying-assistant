@@ -5,7 +5,6 @@ on:
     branches: [feature/douyin-cloud-analyzer]
     paths:
       - '.github/workflows/douyin-cloud.yml'
-      - 'douyin-cloud-analyzer/**'
   workflow_dispatch:
     inputs:
       video_url:
@@ -28,7 +27,7 @@ jobs:
     env:
       PYTHONUNBUFFERED: '1'
       WHISPER_MODEL: base
-      VIDEO_URL: ${{ inputs.video_url || 'https://aweme.snssdk.com/aweme/v1/play/?video_id=v2800fgi0000db5rekvog65kkearu0b0&ratio=720p&line=0' }}
+      VIDEO_URL: ${{ inputs.video_url || 'https://v.douyin.com/dViHSoerNs0/' }}
     steps:
       - name: Checkout the feature branch
         uses: actions/checkout@v4
