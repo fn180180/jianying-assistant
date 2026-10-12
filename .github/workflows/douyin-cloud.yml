@@ -1,0 +1,88 @@
+name: Analyze Douyin in Cloud
+
+on:
+  push:
+    branches: [feature/douyin-cloud-analyzer]
+    paths:
+      - '.github/workflows/douyin-cloud.yml'
+      - 'douyin-cloud-analyzer/**'
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: '抖音影片分享文字或 AnyToCopy 直鏈'
+        type: string
+        required: true
+      focus:
+        description: '分析重點；例如男生三餐、熱量、體重'
+        type: string
+        required: false
+        default: '男生六哥的低脂三餐和體重'
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-video-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PYTHONUNBUFFERED: '1'
+      WHISPER_MODEL: base
+      VIDEO_URL: ${{ inputs.video_url || 'https://v.douyin.com/dViHSoerNs0/' }}
+    steps:
+      - name: Checkout the feature branch
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install FFmpeg and Chinese OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-chi-sim
+
+      - name: Python libraries
+        run: |
+          python -m pip install -r douyin-cloud-analyzer/requirements.txt pytest
+
+      - name: Run unit tests
+        run: |
+          python -m pytest douyin-cloud-analyzer/cloud_douyin/tests -q
+
+      - name: Download video and analyze in cloud runner
+        id: analyze
+        continue-on-error: true
+        run: |
+          mkdir -p output
+          python douyin-cloud-analyzer/cloud_douyin/analyze.py --url "$VIDEO_URL" --output output
+
+      - name: Show text report in Actions Summary
+        if: always()
+        run: |
+          if [ -f output/report.md ]; then
+            head -n 120 output/report.md >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "完整 OCR、逐字稿與 JPG 分鏡圖請下載本次 Artifact。" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## 未產生分析報告，請查看執行日誌。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload only text and contact sheets, no MP4/WAV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: douyin-visual-analysis-${{ github.run_number }}
+          path: |
+            output/report.md
+            output/report.json
+            output/ocr.json
+            output/transcript.txt
+            output/visual_evidence/*.jpg
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Fail workflow if download or analysis failed
+        if: steps.analyze.outcome == 'failure'
+        run: exit 1
