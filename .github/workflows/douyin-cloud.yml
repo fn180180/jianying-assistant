@@ -27,7 +27,7 @@ jobs:
     env:
       PYTHONUNBUFFERED: '1'
       WHISPER_MODEL: base
-      VIDEO_URL: ${{ inputs.video_url || 'https://v26-default.365yg.com/6128bd030a0a4ea0f3ee12e16ba44256/6acdcdd7/video/tos/cn/tos-cn-ve-15/o8sHmIggQIwUezWBgPVBbGRCmIGeG5YeAAqLG7/?a=6383&ch=26&cr=3&dr=0&lr=all&cd=0%7C0%7C0%7C3&cv=1&br=734&bt=734&cs=2&ds=4&ft=HImFM68nffPdHK~2N12NvAq-antLjrKTwmNuRka~oJbmvjVhWL6&mime_type=video_mp4&qs=15&rc=ZWUzPDk7Ojk3Ojk6OTk7OUBpM3I8ZWw5cmpqZTMzNGkzM0BeMzQwMmJfXzIxMGBfYDJhYSM1bW0yMmRzNjNhLS1kLTBzcw%3D%3D&btag=c0000e00028000&cquery=100w_100B_100x_100z_100o&dy_q=1791861547&feature_id=d86bd754948bc17d2db98d02df5c6710&l=20261013111907FD27B0E3301D51CDCDFE' }}
+      VIDEO_URL: ${{ inputs.video_url || 'https://www.douyin.com/video/7696569060197153721' }}
     steps:
       - name: Checkout the feature branch
         uses: actions/checkout@v4
