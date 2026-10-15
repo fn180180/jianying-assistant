@@ -27,7 +27,7 @@ jobs:
     env:
       PYTHONUNBUFFERED: '1'
       WHISPER_MODEL: base
-      VIDEO_URL: ${{ inputs.video_url || 'https://www.douyin.com/video/7696569060197153721' }}
+      VIDEO_URL: ${{ inputs.video_url || 'https://aweme.snssdk.com/aweme/v1/play/?video_id=v2800fgi0000db7r78nog65i3mubom10&ratio=720p&line=0' }}
     steps:
       - name: Checkout the feature branch
         uses: actions/checkout@v4
