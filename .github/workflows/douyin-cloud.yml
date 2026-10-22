@@ -5,6 +5,7 @@ on:
     branches: [feature/douyin-cloud-analyzer]
     paths:
       - '.github/workflows/douyin-cloud.yml'
+      - 'douyin-cloud-analyzer/cloud_douyin/**'
   workflow_dispatch:
     inputs:
       video_url:
