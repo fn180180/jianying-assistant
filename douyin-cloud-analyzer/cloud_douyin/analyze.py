@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlsplit, quote
 import requests
@@ -354,18 +355,25 @@ def main() -> int:
         with tempfile.TemporaryDirectory(prefix="douyin-actions-") as tmp:
             directory = Path(tmp)
             video = directory / "temporary.mp4"
-            meta = resolve(data["source"])
-            data["title"] = meta["title"]
-            try:
-                data["bytes"], _ = download(meta["media"], video)
-            except Exception as first:
-                # Some Douyin CDNs reject the GitHub runner address; use parsing
-                # service proxy as a fallback only, still a bounded HTTPS stream.
-                if "z.gao.gs/proxy.php" in meta["media"]:
-                    raise
-                proxy = "https://z.gao.gs/proxy.php?url=" + quote(meta["media"], safe="")
-                data["warnings"].append("原始 CDN 下載失敗，使用代理：" + type(first).__name__)
-                data["bytes"], _ = download(proxy, video)
+            # The GitHub job downloads the short-lived CDN URL before slow apt installs.
+            # Reuse it rather than fetching an expired URL hours later.
+            prefetched = Path(os.environ.get("RUNNER_TEMP", "/tmp")) / "prefetched-video.mp4"
+            if prefetched.is_file() and prefetched.stat().st_size > 64 * 1024:
+                shutil.copyfile(prefetched, video)
+                data["bytes"] = video.stat().st_size
+                data["title"] = "Pre-fetched verified MP4"
+                print("PREFETCH_CACHE_HIT", data["bytes"], flush=True)
+            else:
+                meta = resolve(data["source"])
+                data["title"] = meta["title"]
+                try:
+                    data["bytes"], _ = download(meta["media"], video)
+                except Exception as first:
+                    if "z.gao.gs/proxy.php" in meta["media"]:
+                        raise
+                    proxy = "https://z.gao.gs/proxy.php?url=" + quote(meta["media"], safe="")
+                    data["warnings"].append("原始 CDN 下載失敗，使用代理：" + type(first).__name__)
+                    data["bytes"], _ = download(proxy, video)
             duration, frames = extract_frames(video, directory / "frames")
             data["duration"] = round(duration, 2)
             print("DOWNLOAD_OK", data["bytes"], "FRAMES", len(frames), flush=True)
