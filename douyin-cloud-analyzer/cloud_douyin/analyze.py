@@ -283,6 +283,38 @@ def make_sheets(frames: list[Path], ocr: list[dict], out: Path) -> list[str]:
     return files
 
 
+def make_hook_sheets(video: Path, out: Path, seconds: float) -> list[str]:
+    """0.25-second contact sheets of the opening to support repeatable hook effects."""
+    folder = out / "visual_evidence"
+    folder.mkdir(exist_ok=True)
+    output = []
+    with tempfile.TemporaryDirectory(prefix="hook-") as tmp:
+        root = Path(tmp)
+        cmd(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+             "-i", str(video), "-t", str(min(12.0, seconds)),
+             "-vf", "fps=4,scale=min(720\\,iw):-2",
+             "-q:v", "5", str(root / "hook_%04d.jpg")], timeout=90)
+        frames = sorted(root.glob("hook_*.jpg"))
+        for start in range(0, len(frames), 16):
+            segment = frames[start:start + 16]
+            width, height, columns = 320, 610, 4
+            canvas = Image.new("RGB", (width*columns, height*4), "#f6f6f6")
+            artist = ImageDraw.Draw(canvas)
+            for j, fname in enumerate(segment):
+                with Image.open(fname) as source:
+                    frame = source.convert("RGB")
+                    frame.thumbnail((width-10, height-45))
+                    x = (j%columns)*width + (width-frame.width)//2
+                    y = (j//columns)*height + 29
+                    canvas.paste(frame, (x,y))
+                artist.text(((j%columns)*width+8, (j//columns)*height+8),
+                            f"{(start+j)/4:.2f}s", fill="#111111")
+            dest = folder / f"hook_025s_{start//16+1:02d}.jpg"
+            canvas.save(dest, "JPEG", quality=84, optimize=True)
+            output.append("visual_evidence/" + dest.name)
+    return output
+
+
 def report_text(data: dict) -> str:
     lines = ["# 抖音影片雲端分析素材包", "",
         "**來源：** " + data.get("source", ""),
@@ -293,6 +325,8 @@ def report_text(data: dict) -> str:
         "OCR 和 Whisper 都可能出錯，不能把左右人物食材混淆；尚未自行判定食材重量或熱量。", "",
         "## JPG 分鏡圖（Artifact 內）", ""]
     lines.extend("- " + path for path in data.get("sheets", []))
+    lines += ["", "## 開場 0-12秒四分之一秒分鏡", ""]
+    lines.extend("- " + path for path in data.get("hook_sheets", []))
     lines += ["", "## 影片旁白逐字稿", "",
               data.get("transcript", "") or "尚未辨識到語音。", "",
               "## 畫面中文文字 OCR（按秒）", ""]
@@ -313,7 +347,7 @@ def main() -> int:
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
     data = {"source": "", "title": "", "duration": None, "bytes": 0,
-            "sheets": [], "ocr": [], "transcript": "", "warnings": []}
+            "sheets": [], "hook_sheets": [], "ocr": [], "transcript": "", "warnings": []}
     code = 0
     try:
         data["source"] = extract_link(args.url)
@@ -337,10 +371,11 @@ def main() -> int:
             print("DOWNLOAD_OK", data["bytes"], "FRAMES", len(frames), flush=True)
             data["ocr"] = read_ocr(frames)
             data["sheets"] = make_sheets(frames, data["ocr"], out)
+            data["hook_sheets"] = make_hook_sheets(video, out, duration)
             data["transcript"], warning = transcribe(video, directory)
             if warning:
                 data["warnings"].append(warning)
-            print("EVIDENCE_IMAGES", len(data["sheets"]), "OCR_FRAMES",
+            print("EVIDENCE_IMAGES", len(data["sheets"])+len(data["hook_sheets"]), "OCR_FRAMES",
                   len(data["ocr"]), flush=True)
     except Exception as exc:
         data["warnings"].append(type(exc).__name__ + ": " + str(exc)[:320])
