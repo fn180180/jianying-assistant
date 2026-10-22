@@ -27,7 +27,8 @@ jobs:
     env:
       PYTHONUNBUFFERED: '1'
       WHISPER_MODEL: base
-      VIDEO_URL: ${{ inputs.video_url || 'https://aweme.snssdk.com/aweme/v1/play/?video_id=v2800fgi0000db8f65fog65ppuui0aj0&ratio=720p&line=0' }}
+      OMP_THREAD_LIMIT: '1'
+      VIDEO_URL: ${{ inputs.video_url || 'https://v5-coldy.douyinvod.com/7af46202c8a7c5ff9ec729eb17f8978d/6ada20f2/video/tos/cn/tos-cn-ve-15/o4GfJFMHAzC9yD8vIKJATNNgCrEASqfNggBRQW/?a=1128&ch=0&cr=0&dr=0&cd=0%7C0%7C0%7C0&cv=1&br=844&bt=844&cs=0&ds=3&ft=MgtpHQQqUYqfJEZPo0OW_QYaUqiXn3Pd9VJEg3-NIbPD-Ipz&mime_type=video_mp4&qs=0&rc=ZmU6Nmc1O2U4OTpkNDw2NkBpanEzZHg5cjc8PDMzNGkzM0AwMi80NmIuXjQxMWEtLTBeYSNmL24wMmRzMzFhLS1kLWFzcw%3D%3D&btag=c0010e0009d000&cquery=100y_10sH&dy_q=1792676548&feature_id=f5241e7604dff1d9d6c943fd20bd51a2&l=20261022214228EECC008A03CBD0F3500A' }}
     steps:
       - name: Checkout the feature branch
         uses: actions/checkout@v4
@@ -36,11 +37,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'douyin-cloud-analyzer/requirements.txt'
 
       - name: Install FFmpeg and Chinese OCR
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-chi-sim
+          if ! command -v ffmpeg >/dev/null || ! command -v tesseract >/dev/null || ! tesseract --list-langs 2>/dev/null | grep -qx chi_sim; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-chi-sim
+          else
+            echo 'Reusing preinstalled FFmpeg and Chinese OCR'
+          fi
 
       - name: Python libraries
         run: |
