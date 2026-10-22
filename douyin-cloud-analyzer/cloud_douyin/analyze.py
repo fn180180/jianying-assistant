@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlsplit, quote
 import requests
 from PIL import Image, ImageOps, ImageDraw
@@ -189,22 +190,28 @@ def extract_frames(video: Path, directory: Path) -> tuple[float, list[Path]]:
 
 
 def read_ocr(frames: list[Path]) -> list[dict]:
-    rows = []
+    """Parallel CPU OCR, retaining every 1-second frame and original order."""
     keywords = re.compile(r"\d|六哥|六一|早餐|午餐|晚餐|低脂|低碳|克|kg|饺|餃|肉|汤|湯|貝|贝|體重|体重")
-    for second, file in enumerate(frames):
+    os.environ.setdefault("OMP_THREAD_LIMIT", "1")
+
+    def one(item):
+        second, file = item
         try:
             with Image.open(file) as im:
                 prepared = ImageOps.autocontrast(im.convert("L"))
-                txt = pytesseract.image_to_string(prepared, lang="chi_sim+eng",
-                         config="--psm 11", timeout=8)
+                txt = pytesseract.image_to_string(
+                    prepared, lang="chi_sim+eng", config="--psm 11", timeout=8)
             lines = [x.strip() for x in txt.splitlines() if x.strip()]
             lines = [x for x in lines if keywords.search(x)]
             if lines:
-                rows.append({"second": second, "lines": lines[:22]})
+                return {"second": second, "lines": lines[:22]}
         except Exception as exc:
             if second < 3:
                 print("OCR warning:", type(exc).__name__, str(exc)[:90], flush=True)
-    return rows
+        return None
+
+    with ThreadPoolExecutor(max_workers=min(3, max(1, os.cpu_count() or 2))) as pool:
+        return [item for item in pool.map(one, enumerate(frames)) if item]
 
 
 def transcribe(video: Path, directory: Path) -> tuple[str, str]:
