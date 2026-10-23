@@ -1,0 +1,101 @@
+name: Analyze Douyin in Cloud
+
+on:
+  push:
+    branches: [feature/douyin-cloud-analyzer]
+    paths:
+      - '.github/workflows/douyin-cloud.yml'
+      - 'douyin-cloud-analyzer/cloud_douyin/**'
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: '抖音影片分享文字或 AnyToCopy 直鏈'
+        type: string
+        required: true
+      focus:
+        description: '分析重點；例如男生三餐、熱量、體重'
+        type: string
+        required: false
+        default: '完整分析影片內容、畫面、口播與可復刻重點'
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-video-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PYTHONUNBUFFERED: '1'
+      WHISPER_MODEL: base
+      OMP_THREAD_LIMIT: '1'
+      VIDEO_URL: ${{ inputs.video_url || 'https://aweme.snssdk.com/aweme/v1/play/?video_id=v0200fg10000cq15mrfog65gp2rp96e0&ratio=720p&line=0' }}
+    steps:
+      - name: Checkout the feature branch
+        uses: actions/checkout@v4
+
+      - name: Prefetch signed video immediately
+        run: |
+          curl -fLsS --retry 1 --max-time 90 -A 'Mozilla/5.0' -H 'Referer: https://www.douyin.com/' "$VIDEO_URL" -o "$RUNNER_TEMP/prefetched-video.mp4"
+          test "$(stat -c%s "$RUNNER_TEMP/prefetched-video.mp4")" -gt 65536
+          echo "SIGNED_VIDEO_PREFETCH_OK $(stat -c%s "$RUNNER_TEMP/prefetched-video.mp4")"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'douyin-cloud-analyzer/requirements.txt'
+
+      - name: Install FFmpeg and Chinese OCR
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v tesseract >/dev/null || ! tesseract --list-langs 2>/dev/null | grep -qx chi_sim; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-chi-sim
+          else
+            echo 'Reusing preinstalled FFmpeg and Chinese OCR'
+          fi
+
+      - name: Python libraries
+        run: |
+          python -m pip install -r douyin-cloud-analyzer/requirements.txt pytest
+
+      - name: Run unit tests
+        run: |
+          python -m pytest douyin-cloud-analyzer/cloud_douyin/tests -q
+
+      - name: Download video and analyze in cloud runner
+        id: analyze
+        continue-on-error: true
+        run: |
+          mkdir -p output
+          python douyin-cloud-analyzer/cloud_douyin/analyze.py --url "$VIDEO_URL" --output output
+
+      - name: Show text report in Actions Summary
+        if: always()
+        run: |
+          if [ -f output/report.md ]; then
+            head -n 120 output/report.md >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "完整 OCR、逐字稿與 JPG 分鏡圖請下載本次 Artifact。" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## 未產生分析報告，請查看執行日誌。" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload only text and contact sheets, no MP4/WAV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: douyin-visual-analysis-${{ github.run_number }}
+          path: |
+            output/report.md
+            output/report.json
+            output/ocr.json
+            output/transcript.txt
+            output/visual_evidence/*.jpg
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Fail workflow if download or analysis failed
+        if: steps.analyze.outcome == 'failure'
+        run: exit 1
