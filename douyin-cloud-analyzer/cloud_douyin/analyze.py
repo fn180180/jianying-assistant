@@ -203,7 +203,7 @@ def read_ocr(frames: list[Path]) -> list[dict]:
                 txt = pytesseract.image_to_string(
                     prepared, lang="chi_sim+eng", config="--psm 11", timeout=8)
             lines = [x.strip() for x in txt.splitlines() if x.strip()]
-            lines = [x for x in lines if keywords.search(x)]
+            lines = [x for x in lines if re.search(r"[\u4e00-\u9fffA-Za-z0-9]", x) and len(x) >= 2]
             if lines:
                 return {"second": second, "lines": lines[:22]}
         except Exception as exc:
