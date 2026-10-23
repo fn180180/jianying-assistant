@@ -16,7 +16,7 @@ on:
         description: '分析重點；例如男生三餐、熱量、體重'
         type: string
         required: false
-        default: '男生六哥的低脂三餐和體重'
+        default: '完整分析影片內容、畫面、口播與可復刻重點'
 
 permissions:
   contents: read
